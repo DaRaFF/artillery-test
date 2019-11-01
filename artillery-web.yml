@@ -1,0 +1,21 @@
+config:
+  environments:
+    artillery:
+      target: "{{ url }}"
+      phases:
+        # Create ARRIVAL_RATE users every second for DURATION seconds
+        - duration: "{{ $processEnvironment.DURATION }}"
+          arrivalRate: "{{ $processEnvironment.ARRIVAL_RATE }}"
+      payload:
+        # Define fields from csv file, which can be used again as variables
+        # in the scenario, e.g. {{ url }}
+        # default delimiter for a csv is ,
+        path: "urls.csv"
+        fields:
+          - "url"
+
+scenarios:
+  - name: "call all url's"
+    flow:
+      - get:
+          url: "{{ url }}"
