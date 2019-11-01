@@ -1,0 +1,98 @@
+---
+kind: pipeline
+name: test
+
+steps:
+- name: build
+  image: livingdocs/docker-node
+  volumes:
+    - name: dockersocket
+      path: /var/run/docker.sock
+  environment:
+    DOCKER_PASSWORD:
+      from_secret: DOCKER_PASSWORD
+    DOCKER_USERNAME:
+      from_secret: DOCKER_USERNAME
+  commands:
+    - |
+      set -e
+      echo $DOCKER_PASSWORD | docker login -u="$DOCKER_USERNAME" --password-stdin 1>/dev/null
+      SHA_TAG=daraff/load-test:sha-$DRONE_COMMIT_SHA
+      BRANCH_TAG=daraff/load-test:branch-$(echo $DRONE_BRANCH | sed 's/[^a-zA-Z0-9.-]/-/g')
+
+      docker build -t $SHA_TAG .
+      docker tag $SHA_TAG $BRANCH_TAG
+      docker push $SHA_TAG
+      docker push $BRANCH_TAG
+
+volumes:
+- name: dockersocket
+  host:
+    path: /var/run/docker.sock
+
+trigger:
+  event: [push]
+
+---
+kind: pipeline
+name: tag
+depends_on: [test]
+
+clone:
+  depth: 100
+
+steps:
+- name: release
+  image: livingdocs/semantic-release:v1.0.0
+  environment:
+    GH_TOKEN:
+      from_secret: GH_TOKEN
+
+trigger:
+  event: [push]
+---
+kind: pipeline
+name: publish
+
+steps:
+- name: docker
+  image: livingdocs/docker-node
+  volumes:
+    - name: dockersocket
+      path: /var/run/docker.sock
+  environment:
+    DOCKER_PASSWORD:
+      from_secret: DOCKER_PASSWORD
+    DOCKER_USERNAME:
+      from_secret: DOCKER_USERNAME
+  commands:
+    - |
+      set -e
+      SHA_TAG=daraff/load-test:sha-$DRONE_COMMIT_SHA
+      RELEASE_TAG=daraff/load-test:$DRONE_TAG
+
+      echo $DOCKER_PASSWORD | docker login -u="$DOCKER_USERNAME" --password-stdin 1>/dev/null
+
+      docker build -t $RELEASE_TAG . -f-<<EOF
+      FROM $SHA_TAG
+      EOF
+
+      docker push $RELEASE_TAG
+
+      echo -----------------
+      echo Docker Tag: $SHA_TAG
+      echo Docker Branch Tag: $RELEASE_TAG
+      echo -----------------
+
+volumes:
+- name: dockersocket
+  host:
+    path: /var/run/docker.sock
+
+trigger:
+  event: [tag]
+---
+kind: signature
+hmac: 96b02a4e185b2d75b14e851e4ecd1446a903284c7bc68f73170da77c37cffbe4
+
+...
