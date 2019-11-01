@@ -75,6 +75,7 @@ steps:
 
       docker build -t $RELEASE_TAG . -f-<<EOF
       FROM $SHA_TAG
+      RUN node -e 'const pkg = require("./package.json"); pkg.version = "$DRONE_TAG".replace(/^v/, ""); fs.writeFileSync("./package.json", JSON.stringify(pkg, null, 2));'
       EOF
 
       docker push $RELEASE_TAG
@@ -93,6 +94,6 @@ trigger:
   event: [tag]
 ---
 kind: signature
-hmac: 96b02a4e185b2d75b14e851e4ecd1446a903284c7bc68f73170da77c37cffbe4
+hmac: 46ae8b64d576fd25e340aac1ecd19d714a78a798fb25ddce02658d505f8658c1
 
 ...
