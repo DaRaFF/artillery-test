@@ -70,14 +70,15 @@ steps:
       set -e
       SHA_TAG=daraff/load-test:sha-$DRONE_COMMIT_SHA
       RELEASE_TAG=daraff/load-test:$DRONE_TAG
+      LATEST=daraff/load-test:latest
 
       echo $DOCKER_PASSWORD | docker login -u="$DOCKER_USERNAME" --password-stdin 1>/dev/null
 
-      docker build -t $RELEASE_TAG . -f-<<EOF
+      docker build -t $RELEASE_TAG -t $LATEST . -f-<<EOF
       FROM $SHA_TAG
       EOF
 
-      docker push $RELEASE_TAG
+      docker push $RELEASE_TAG $LATEST
 
       echo -----------------
       echo Docker Tag: $SHA_TAG
@@ -93,6 +94,6 @@ trigger:
   event: [tag]
 ---
 kind: signature
-hmac: 96b02a4e185b2d75b14e851e4ecd1446a903284c7bc68f73170da77c37cffbe4
+hmac: 192b55801bc2c73872f1669594bfc39e9d6867dee1a40ed7bada98b301f2cd6d
 
 ...

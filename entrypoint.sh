@@ -1,8 +1,6 @@
 #!/bin/sh
 set -e
 
-ls -all /usr/src/app
-
 # Functions
 help() { 
   echo "Options"
