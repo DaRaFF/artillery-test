@@ -78,7 +78,8 @@ steps:
       FROM $SHA_TAG
       EOF
 
-      docker push $RELEASE_TAG $LATEST
+      docker push $RELEASE_TAG
+      docker push $LATEST
 
       echo -----------------
       echo Docker Tag: $SHA_TAG
@@ -94,6 +95,6 @@ trigger:
   event: [tag]
 ---
 kind: signature
-hmac: 192b55801bc2c73872f1669594bfc39e9d6867dee1a40ed7bada98b301f2cd6d
+hmac: 94130f3dea2cdb1ccdc0398cd29f86470f0d31ac0b16606f8d62ebee802331a1
 
 ...
